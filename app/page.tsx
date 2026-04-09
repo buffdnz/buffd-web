@@ -45,7 +45,7 @@ const Home = () => {
       </div>
 
       <div id="services" className="services-section pt-12 sm:pt-16 lg:pt-20 pb-16 sm:pb-20 lg:pb-24 px-4 sm:px-6 border-t border-white/5">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight tracking-tight text-center mb-8 sm:mb-10">
             Our Services
           </h2>
@@ -158,11 +158,7 @@ const Home = () => {
       </div>
 
       {/* Floating Book Now Button for Mobile */}
-      <Link href="#booking">
-        <button className="fixed bottom-4 right-4 theme-accent hover:opacity-90 shadow-lg hover:shadow-xl transition-all duration-300 text-[var(--text)] p-4 rounded-full shadow-lg md:hidden hover:theme-accent transition">
-          Book Now
-        </button>
-      </Link>
+
 
       {/* Live Chat Placeholder */}
       <LiveChat

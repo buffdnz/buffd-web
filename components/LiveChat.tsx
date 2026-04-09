@@ -9,12 +9,12 @@ type Message = {
   text: string;
 };
 
+type FaqId = keyof typeof FAQ_ANSWERS;
+
 type LiveChatProps = {
   estimate?: string | null;
   onBookNow?: () => void;
 };
-
-type FaqId = keyof typeof FAQ_ANSWERS;
 
 const LiveChat: React.FC<LiveChatProps> = ({ estimate = null, onBookNow }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +27,7 @@ const LiveChat: React.FC<LiveChatProps> = ({ estimate = null, onBookNow }) => {
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   const promptMap = useMemo(() => {
     return new Map(FAQ_PROMPTS.map((prompt) => [prompt.id, prompt.label]));
@@ -37,12 +38,35 @@ const LiveChat: React.FC<LiveChatProps> = ({ estimate = null, onBookNow }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (panelRef.current && !panelRef.current.contains(target)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
+    
   const resolveAnswer = (id: FaqId): string => {
     const entry = FAQ_ANSWERS[id];
-
-    if (!entry) {
-      return 'Sorry, I do not have an answer for that yet.';
-    }
 
     if (typeof entry === 'function') {
       return entry(estimate);
@@ -55,9 +79,11 @@ const LiveChat: React.FC<LiveChatProps> = ({ estimate = null, onBookNow }) => {
     if (id === 'booking' && onBookNow) {
       onBookNow();
     }
+
     if (id === 'difference') {
       document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
     }
+
     const userLabel = promptMap.get(id) ?? 'Question';
     const botAnswer = resolveAnswer(id);
 
@@ -88,9 +114,16 @@ const LiveChat: React.FC<LiveChatProps> = ({ estimate = null, onBookNow }) => {
 
   return (
     <>
-      <div className="fixed bottom-20 right-4 z-50">
+      {isOpen && (
+        <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] sm:bg-black/20" />
+      )}
+
+      <div className="fixed bottom-4 right-4 z-50 sm:bottom-20">
         {isOpen ? (
-          <div className="theme-card w-[min(92vw,380px)] overflow-hidden rounded-3xl shadow-2xl">
+          <div
+            ref={panelRef}
+            className="theme-card w-[calc(100vw-2rem)] max-w-[380px] overflow-hidden rounded-3xl shadow-2xl max-sm:max-h-[75vh] sm:w-[380px]"
+          >
             <div className="theme-surface flex items-center justify-between border-b px-4 py-3">
               <div>
                 <p className="text-sm font-semibold text-[var(--text)]">Live Chat</p>
@@ -116,11 +149,12 @@ const LiveChat: React.FC<LiveChatProps> = ({ estimate = null, onBookNow }) => {
               </div>
             </div>
 
-            <div className="max-h-[420px] space-y-3 overflow-y-auto px-4 py-4">
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+              <div className="space-y-">
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${
+                  className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-6 ${
                     message.type === 'bot'
                       ? 'theme-surface text-[var(--text)]'
                       : 'ml-auto theme-accent text-white'
@@ -129,29 +163,30 @@ const LiveChat: React.FC<LiveChatProps> = ({ estimate = null, onBookNow }) => {
                   {message.text}
                 </div>
               ))}
-
+              </div>
               <div ref={messagesEndRef} />
             </div>
 
             <div className="border-t border-[var(--border)] px-4 py-4">
-              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
+              <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
                 Quick questions
               </p>
 
-              <div className="flex flex-wrap gap-2">
-                {FAQ_PROMPTS.map((prompt) => (
-                  <button
-                    key={prompt.id}
-                    type="button"
-                    onClick={() => handlePromptClick(prompt.id as FaqId)}
-                    className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-left text-xs text-[var(--text)] transition hover:bg-white/10"
-                  >
-                    {prompt.label}
-                  </button>
-                ))}
+              <div className="max-h-24 overflow-y-auto pr-1 sm:max-h-28">
+                <div className="flex flex-wrap gap-2">
+                  {FAQ_PROMPTS.map((prompt) => (
+                    <button
+                      key={prompt.id}
+                      type="button"
+                      onClick={() => handlePromptClick(prompt.id as FaqId)}
+                      className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-left text-[11px] text-[var(--text)] transition hover:bg-white/10"
+                    >
+                      {prompt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-
-              <div className="mt-4">
+              <div className="mt-3">
                 <button
                   type="button"
                   onClick={onBookNow}
@@ -166,7 +201,7 @@ const LiveChat: React.FC<LiveChatProps> = ({ estimate = null, onBookNow }) => {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="backdrop-blur-md bg-white/10 border border-white/10 text-[var(--text)] px-5 py-4 rounded-full shadow-lg hover:bg-white/20 transition"
+            className="rounded-full bg-white/10 border border-white/10 backdrop-blur-md text-[var(--text)] px-5 py-4 rounded-full shadow-lg hover:bg-white/20 transition"
           >
             Chat
           </button>
