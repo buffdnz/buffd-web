@@ -1,7 +1,7 @@
 {
-  "name": "spotless-sams",
+  "name": "buffd-website",
   "version": "1.0.0",
-  "description": "A modern, mobile-first car detailing website for Spotless Sams.",
+  "description": "A modern, mobile-first car detailing website for Buffd NZ.",
   "main": "app/page.tsx",
   "scripts": {
     "dev": "next dev",
@@ -16,7 +16,7 @@
     "car detailing",
     "website"
   ],
-  "author": "Your Name",
+  "author": "Shifuguru",
   "license": "MIT",
   "dependencies": {
     "ical-generator": "^10.1.0",
