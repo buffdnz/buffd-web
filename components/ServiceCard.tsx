@@ -2,108 +2,110 @@ import React from 'react';
 
 type Step = 'service' | 'vehicle' | 'doors' | 'suburb' | 'time' | 'contact' | 'confirm';
 
-interface ServiceCardProps {
+type ServiceCardProps = {
   title: string;
   price: string;
   summary: string;
   features: string[];
   duration: string;
-  bestFor?: string;
+  bestFor: string;
   highlight?: boolean;
-
   isSelected?: boolean;
-  step?: Step;
-
+  step?: string;
   onSelect?: () => void;
   onContinue?: () => void;
+  onBack?: () => void;
+  continueLabel?: string;
+  canContinue?: boolean;
+  children?: React.ReactNode;
+};
 
-  children?: React.ReactNode; // step content injected from parent
-}
-
-const ServiceCard: React.FC<ServiceCardProps> = ({
+export default function ServiceCard({
   title,
   price,
   summary,
   features,
   duration,
   bestFor,
-  highlight = false,
-  isSelected = false,
-  step = 'service',
+  highlight,
+  isSelected,
   onSelect,
   onContinue,
+  onBack,
+  continueLabel = 'Continue',
+  canContinue = true,
   children,
-}) => {
+}: ServiceCardProps) {
   return (
     <div
-      className={`theme-card relative w-full rounded-2xl border p-5 text-left shadow-md transition-all duration-300 ${
+      className={`h-full min-h-[480px] rounded-3xl border p-6 transition-all duration-500 ease-out ${
         isSelected
-          ? 'scale-[1.02] border-[var(--accent-to)] ring-2 ring-[var(--accent-to)] shadow-xl'
-          : 'border-white/10 hover:-translate-y-1 hover:shadow-xl cursor-pointer'
-      } ${highlight ? 'border-fuchsia-400/50' : ''}`}
-      onClick={!isSelected ? onSelect : undefined}
+          ? 'border-[var(--accent-to)] bg-[var(--surface)] shadow-2xl'
+          : 'border-[var(--border)] bg-[var(--surface)]'
+      }`}
     >
-      {highlight && (
-        <div className="theme-accent absolute right-4 top-4 rounded-full px-3 py-1 text-xs">
-          Most Popular
+      <div className="flex h-full flex-col">
+        <div>
+          <h3 className="text-2xl font-semibold text-[var(--text)]">{title}</h3>
+          <p className="mt-1 text-lg text-[var(--text-muted)]">{price}</p>
         </div>
-      )}
 
-      {/* HEADER */}
-      <div className="pr-24">
-        <h3 className="text-lg font-semibold text-[var(--text)]">{title}</h3>
-        <p className="mt-1 text-base text-[var(--text-muted)]">{price}</p>
+        <p className="mt-4text-sm text-[var(--text-muted)]">{summary}</p>
+
+        {!isSelected && (
+          <>
+            <div className="mt-4 flex flex-1 flex-col">
+              <ul className="space-y-2 text-sm text-[var(--text-muted)]">
+                {features.map((feature) => (
+                  <li key={feature}>• {feature}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-6 text-sm text-[var(--text-muted)]">
+              <p>Duration: {duration}</p>
+              <p>Best for: {bestFor}</p>
+            </div>
+
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={onSelect}
+                className="w-full rounded-2xl px-5 py-3 font-medium theme-accent"
+              >
+                Select Service
+              </button>
+            </div>
+          </>
+        )}
+
+        {isSelected && (
+          <>
+            <div className="mt-4 animate-card-open rounded-2xl border border-[var(--border)] p-4">
+              {children}
+            </div>
+
+            <div className="mt-6 mt-auto flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={onBack}
+                className="w-full rounded-2xl border border-[var(--border)] px-5 py-3 font-medium text-[var(--text)]"
+              >
+                Back
+              </button>
+
+              <button
+                type="button"
+                onClick={onContinue}
+                disabled={!canContinue}
+                className="w-full rounded-2xl px-5 py-3 font-medium theme-accent disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {continueLabel}
+              </button>
+            </div>
+          </>
+        )}
       </div>
-
-      {/* DEFAULT CONTENT (only when not selected) */}
-      {!isSelected && (
-        <>
-          <p className="mt-4 leading-7 text-[var(--text-muted)]">{summary}</p>
-
-          <div className="mt-4 space-y-2">
-            {features.map((feature, index) => (
-              <p key={index} className="text-sm text-[var(--text-muted)]">
-                ✓ {feature}
-              </p>
-            ))}
-          </div>
-
-          <div className="mt-4 text-sm text-[var(--text-muted)]">
-            <p>⏱ {duration}</p>
-            {bestFor && <p className="mt-1">Best for: {bestFor}</p>}
-          </div>
-
-          <div className="mt-5 border-t border-white/10 pt-4">
-            <p className="text-sm text-[var(--text-muted)]">
-              Tap to select this service.
-            </p>
-          </div>
-        </>
-      )}
-
-      {/* EXPANDED FLOW (when selected) */}
-      {isSelected && (
-        <div className="mt-5 border-t border-white/10 pt-4 space-y-4">
-          {/* Injected step UI */}
-          {children}
-
-          {/* Continue button */}
-          {onContinue && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onContinue();
-              }}
-              className="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:opacity-90"
-            >
-              Continue
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
-};
-
-export default ServiceCard;
+}

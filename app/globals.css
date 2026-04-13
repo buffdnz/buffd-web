@@ -168,3 +168,18 @@ button {
 .gallery-image:hover {
   opacity: 0.85;
 }
+
+@keyframes cardOpen {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-card-open {
+  animation: cardOpen 0.35s ease-out;
+}
