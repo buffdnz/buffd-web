@@ -50,7 +50,7 @@ export default function ServiceCard({
           <p className="mt-1 text-lg text-[var(--text-muted)]">{price}</p>
         </div>
 
-        <p className="mt-4text-sm text-[var(--text-muted)]">{summary}</p>
+        <p className="mt-4 text-sm text-[var(--text-muted)]">{summary}</p>
 
         {!isSelected && (
           <>
@@ -90,7 +90,7 @@ export default function ServiceCard({
                 <button
                   type="button"
                   onClick={onBack}
-                  className="w-full rounded-2xl border border-[var(--border)] px-5 py-3 font-medium text-[var(--text)]"
+                  className="w-full rounded-2xl px-5 py-3 border border-[var(--border)] font-medium text-[var(--text)]"
                 >
                   Back
                 </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ServiceCard from '../components/ServiceCard';
 import TestimonialCard from '../components/TestimonialCard';
 import LiveChat from '../components/LiveChat';
@@ -21,9 +21,17 @@ const STEP_ORDER: Step[] = ['service', 'vehicle', 'doors', 'suburb', 'addons', '
 const Home = () => {
   const [step, setStep] = useState<Step>('service');
   const [selectedService, setSelectedService] = useState('');
+  const servicesRef = useRef<HTMLDivElement | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitState, setSubmitState] = useState<'idle' | 'success' | 'error'>('idle');
+  useEffect(() => {
+    if (!selectedService) return;
 
+    servicesRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }, [selectedService, step]);
   const [bookingData, setBookingData] = useState({
     service: '',
     vehicleType: '',
@@ -343,6 +351,7 @@ const Home = () => {
 
     document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
   };
+
   const optionButtonClass = (isActive: boolean) =>
     `rounded-xl border px-4 py-3 text-sm font-medium transition ${
       isActive
@@ -588,14 +597,13 @@ const Home = () => {
     return null;
   };
 
-  const continueLabel =
-  step === 'confirm'
-    ? submitState === 'success'
-      ? 'Finish'
-      : submitting
-        ? 'Sending...'
-        : 'Request Booking'
-    : 'Continue';
+  const continueLabel = step === 'confirm'
+      ? submitState === 'success'
+        ? 'Finish'
+        : submitting
+          ? 'Sending...'
+          : 'Request Booking'
+      : 'Continue';
   
   const carsCleaned = 187; // This would be dynamic in a real app
   const targetCars = 1000;
@@ -615,13 +623,12 @@ const Home = () => {
 
         {/* Main headline */}
         <h1 className="mt-4 max-w-4xl text-3xl font-bold leading-tight tracking-tight text-[var(--text)] sm:text-4xl lg:text-5xl">
-          Premium mobile car cleaning in Wellington
+          Mobile Car Detailing in Wellington
         </h1>
 
         {/* Subheading */}
         <p className="mt-2 max-w-2xl text-base leading-relaxed theme-text-muted sm:text-lg">
-          Long-lasting interior and exterior cleaning, delivered at your location with careful attention
-          to detail.
+          Foam, rinse and buff - bringing tired cars back to life with a deep, careful clean at your doorstep.
         </p>
         
         {/* Hero image */}
@@ -645,7 +652,7 @@ const Home = () => {
           </button>
 
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs theme-text-muted sm:text-sm">
-            <span>✔ Fully insured</span>
+            <span>✔ Locally owned</span>
             <span>✔ Mobile service</span>
             <span>✔ 5-star local reviews</span>
           </div>
@@ -688,7 +695,8 @@ const Home = () => {
         </div>
       </div>
 
-      <div id="services" 
+      <div id="services"
+        ref={servicesRef}
         className="services-section border-t border-white/5 px-4 pt-12 pb-16 sm:px-6 sm:pt-16 sm:pb-20 lg:pt-20 lg:pb-24"
       >
         <div className="mx-auto max-w-6xl">
@@ -707,13 +715,11 @@ const Home = () => {
                   <div
                     key={service.key}
                     className={[
-                      'transition-all duration-500 ease-out',
-                      'min-h-[100%]',
-                      isSelected
-                      ? 'sm:col-span-2 xl:col-span-4' : '',
+                      'transition-all duration-300 ease-out',
+                      isSelected ? 'sm:col-span-2 xl:col-span-4' : '',
                       isDimmed
-                        ? 'pointer-events-none scale-[0.98] opacity-0 sm:max-h-0 sm:overflow-hidden'
-                        : 'opacity-100'
+                        ? 'pointer-events-none hidden opacity-0'
+                        : 'block-opacity-100'
                     ].join(' ')}
                   >
                     <ServiceCard

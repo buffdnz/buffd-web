@@ -70,7 +70,11 @@ html.dark {
 }
 
 html {
-  scroll-behaviour: smooth;
+  scroll-behavior: smooth;
+}
+
+#services {
+  scroll-margin-top: 96px;
 }
 
 body {
