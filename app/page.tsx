@@ -197,11 +197,10 @@ const Home = () => {
         summary: 'A quick exterior wash and interior tidy-up.',
         features: [
           'Exterior hand wash',
-          'Interior vacuum',
-          'Window clean'
+          'Interior vacuum'
         ],
         duration: '30–45 mins',
-        bestFor: 'regular maintenance',
+        bestFor: 'Regular Maintenance',
       },
       {
         key: 'standard',
@@ -217,7 +216,7 @@ const Home = () => {
           'Tyre shine',
         ],
         duration: '60–90 mins',
-        bestFor: 'regular maintenance',
+        bestFor: 'Regular Maintenance',
         highlight: true,
       },
       {
@@ -233,22 +232,22 @@ const Home = () => {
           'Detailed exterior finish',
         ],
         duration: '2–3 hours',
-        bestFor: 'deep clean, pre-sale prep, or special occasions',
+        bestFor: 'Deep Clean, Pre-Sale Prep, or Special Occasions',
       },
     ],
     []
   );
 
   const addonOptions = [
-    { key: 'headlight', label: 'Headlight restore', price: 45 },
-    { key: 'single-polish', label: 'Single-stage polish', price: 70 },
-    { key: 'multi-polish', label: 'Multi-stage polish', price: 140 },
-    { key: 'seat-shampoo', label: 'Seat shampoo / leather', price: 50 },
-    { key: 'pet-hair', label: 'Pet hair removal', price: 35 },
-    { key: 'tar-bug', label: 'Tar + bug removal', price: 35 },
-    { key: 'iron-decon', label: 'Iron decon', price: 40 },
-    { key: 'interior-protect', label: 'Interior protection', price: 45 },
-    { key: 'engine-bay', label: 'Engine bay clean', price: 40 },
+    { key: 'headlight', label: 'Headlight Restore', price: 45 },
+    { key: 'single-polish', label: 'Single-Stage Polish', price: 70 },
+    { key: 'multi-polish', label: 'Multi-Stage Polish', price: 140 },
+    { key: 'seat-shampoo', label: 'Seat Shampoo / Leather', price: 50 },
+    { key: 'pet-hair', label: 'Pet Hair Removal', price: 35 },
+    { key: 'tar-bug', label: 'Tar + Bug Removal', price: 35 },
+    { key: 'iron-decon', label: 'Iron Decon', price: 40 },
+    { key: 'interior-protect', label: 'Interior Protection', price: 45 },
+    { key: 'engine-bay', label: 'Engine Bay Clean', price: 40 },
   ];
   
   const vehicleModifiers: Record<string, number> = {
