@@ -8,6 +8,50 @@ import LiveChat from '../components/LiveChat';
 const basePath = process.env.NODE_ENV === 'production' ? '/buffdnz' : '';
 const bookingsApiUrl = process.env.NEXT_PUBLIC_BOOKINGS_API_URL || '/api/bookings';
 
+function toICSDate(iso: string): string {
+  // Extract local date/time directly from ISO string (e.g. 2026-04-18T10:00:00+12:00)
+  // to avoid UTC conversion losing the NZ local time
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (match) {
+    const [, y, mo, d, h, mi, s] = match;
+    return `${y}${mo}${d}T${h}${mi}${s}`;
+  }
+  // Fallback: parse as-is
+  const dt = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+}
+
+function buildICS(params: {
+  summary: string;
+  description: string;
+  timeStart: string;
+  timeEnd: string;
+  uid: string;
+}): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const now = `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Buffd//Booking System//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `DTSTART;TZID=Pacific/Auckland:${toICSDate(params.timeStart)}`,
+    `DTEND;TZID=Pacific/Auckland:${toICSDate(params.timeEnd)}`,
+    `DTSTAMP:${now}`,
+    `UID:${params.uid}`,
+    `SUMMARY:${params.summary}`,
+    `DESCRIPTION:${params.description.replace(/\n/g, '\\n')}`,
+    'STATUS:CONFIRMED',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ];
+  return lines.join('\r\n');
+}
+
 // Duration in minutes per service
 const SERVICE_DURATIONS: Record<string, number> = {
   basic: 45,
@@ -404,6 +448,24 @@ const Home = () => {
         `Email:          ${bookingData.email}`,
         ``,
         `Booking total:  $${bookingTotal ?? '—'}`,
+        ``,
+        `--- CALENDAR EVENT (copy text below into a .ics file to import) ---`,
+        buildICS({
+          summary: `Buff'd booking — ${serviceLabel}`,
+          description: [
+            `Customer: ${bookingData.name}`,
+            `Phone: +64 ${bookingData.phone}`,
+            `Email: ${bookingData.email}`,
+            `Service: ${serviceLabel}`,
+            `Vehicle: ${vehicleLabels[bookingData.vehicleType] ?? bookingData.vehicleType}`,
+            `Suburb: ${suburbLabels[bookingData.suburb] ?? bookingData.suburb}`,
+            `Addons: ${addonLabels}`,
+            `Total: $${bookingTotal ?? '—'}`,
+          ].join('\n'),
+          timeStart: bookingData.timeStart,
+          timeEnd: bookingData.timeEnd,
+          uid: `buffd-${Date.now()}@buffd.nz`,
+        }),
       ].join('\n');
 
       const submitViaFormFallback = async () => {

@@ -4,6 +4,51 @@ import ical, { ICalCalendarMethod, ICalEventStatus } from 'ical-generator';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const SERVICE_TITLES: Record<string, string> = {
+  basic: 'Basic Wash',
+  standard: 'Standard',
+  deluxe: 'Deluxe',
+};
+
+const ADDON_LABELS: Record<string, string> = {
+  headlight: 'Headlight restore',
+  'single-polish': 'Single-stage polish',
+  'multi-polish': 'Multi-stage polish',
+  'seat-shampoo': 'Seat shampoo / leather',
+  'pet-hair': 'Pet hair removal',
+  'tar-bug': 'Tar + bug removal',
+  'iron-decon': 'Iron decon',
+  'interior-protect': 'Interior protection',
+  'engine-bay': 'Engine bay clean',
+};
+
+const SUBURB_LABELS: Record<string, string> = {
+  cbd: 'Wellington CBD', newtown: 'Newtown', kilbirnie: 'Kilbirnie',
+  miramar: 'Miramar', karori: 'Karori', lowerhutt: 'Lower Hutt',
+};
+
+const VEHICLE_LABELS: Record<string, string> = {
+  sedan: 'Sedan', hatch: 'Hatch', suv: 'SUV', ute: 'Ute', van: 'Van',
+};
+
+function fmtDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString('en-NZ', {
+      timeZone: 'Pacific/Auckland',
+      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true,
+    });
+  } catch { return iso; }
+}
+
+function durationLabel(timeStart: string, timeEnd: string): string {
+  const mins = Math.round((new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / 60000);
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
@@ -50,6 +95,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const serviceTitle = SERVICE_TITLES[service] ?? service;
+    const addonLabels = Array.isArray(selectedAddons) && selectedAddons.length > 0
+      ? selectedAddons.map((k: string) => ADDON_LABELS[k] ?? k).join(', ')
+      : 'None';
+
     const calendar = ical({
       name: 'Buffd Bookings',
       method: ICalCalendarMethod.PUBLISH,
@@ -64,19 +114,20 @@ export async function POST(req: NextRequest) {
       start: new Date(timeStart),
       end: new Date(timeEnd),
       timezone: 'Pacific/Auckland',
-      summary: `Buff’d booking - ${service}`,
+      summary: `Buff'd booking — ${serviceTitle}`,
       description: [
         `Customer: ${name}`,
         `Phone: +64 ${phone}`,
         `Email: ${email || '—'}`,
-        `Service: ${service}`,
-        `Vehicle: ${vehicleType || '—'}`,
+        `Service: ${serviceTitle}`,
+        `Vehicle: ${VEHICLE_LABELS[vehicleType] ?? (vehicleType || '—')}`,
+
         `Doors: ${doors || '—'}`,
-        `Suburb: ${suburb || '—'}`,
-        `Preferred time: ${timeLabel || '—'}`,
-        `Addons: ${Array.isArray(selectedAddons) && selectedAddons.length > 0 ? selectedAddons.join(', ') : 'None'}`,
-        `Estimated total: $${bookingTotal ?? '—'}`,
-        `Duration: ${timeStart && timeEnd ? `${Math.round((new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / 60000)} mins` : '—'}`,
+        `Suburb: ${SUBURB_LABELS[suburb] ?? (suburb || '—')}`,
+
+        `Addons: ${addonLabels}`,
+        `Total: $${bookingTotal ?? '—'}`,
+        `Duration: ${timeStart && timeEnd ? durationLabel(timeStart, timeEnd) : '—'}`,
       ].join('\n'),
       status: ICalEventStatus.CONFIRMED,
       created: new Date(),
@@ -89,21 +140,24 @@ export async function POST(req: NextRequest) {
     const { data, error } = await resend.emails.send({
       from: 'Buffd <onboarding@resend.dev>',
       to: ['buffd.nz@gmail.com'],
-      subject: `New booking request - ${name} - ${service}`,
+      subject: `New booking — ${name} · ${serviceTitle} · ${timeStart ? fmtDate(timeStart) : ''}`,
       text: [
-        `New booking request`,
+        `Service:        ${serviceTitle}`,
+        `Vehicle:        ${VEHICLE_LABELS[vehicleType] ?? (vehicleType || '—')}`,
+        `Doors:          ${doors || '—'}`,
+        `Suburb:         ${SUBURB_LABELS[suburb] ?? (suburb || '—')}`,
+
+        `Addons:         ${addonLabels}`,
         ``,
-        `Name: ${name}`,
-        `Phone: +64 ${phone}`,
-        `Email: ${email}`,
-        `Service: ${service}`,
-        `Vehicle: ${vehicleType || '—'}`,
-        `Doors: ${doors || '—'}`,
-        `Suburb: ${suburb || '—'}`,
-        `Preferred time: ${timeLabel || '—'}`,
-        `Addons: ${Array.isArray(selectedAddons) && selectedAddons.length > 0 ? selectedAddons.join(', ') : 'None'}`,
-        `Estimated total: $${bookingTotal ?? '—'}`,
-        `Duration: ${timeStart && timeEnd ? `${Math.round((new Date(timeEnd).getTime() - new Date(timeStart).getTime()) / 60000)} mins` : '—'}`,
+        `Date/time:      ${timeStart ? fmtDate(timeStart) : '—'}`,
+        `Finish by:      ${timeEnd ? fmtDate(timeEnd) : '—'}`,
+        `Duration:       ${timeStart && timeEnd ? durationLabel(timeStart, timeEnd) : '—'}`,
+        ``,
+        `Name:           ${name}`,
+        `Phone:          +64 ${phone}`,
+        `Email:          ${email || '—'}`,
+        ``,
+        `Booking total:  $${bookingTotal ?? '—'}`,
       ].join('\n'),
       attachments: [
         {
